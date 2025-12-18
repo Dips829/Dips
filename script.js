@@ -180,8 +180,21 @@ function checkPuzzleComplete() {
     });
 
     puzzleStatus.textContent = 'Perfect, just like us.';
+
+    // play audio when puzzle is completed
+    const audio = document.getElementById('puzzleAudio');
+    if (audio) {
+      audio.currentTime = 0;
+      const playPromise = audio.play();   // allowed because user already interacted [web:217][web:221]
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch((err) => {
+          console.warn('Audio play blocked or failed:', err);
+        });
+      }
+    }
   }
 }
+
 
 // navigate to gallery when she clicks the completed picture
 const puzzleTarget = document.getElementById('puzzleTarget');
