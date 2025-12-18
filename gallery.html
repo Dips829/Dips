@@ -17,7 +17,7 @@
         One year of you
       </div>
       <p class="gallery-subtitle">
-        Drag to explore. Scroll to zoom. Hover to see every little moment.
+        Drag to explore. Pinch or scroll to zoom. Tap to see every little moment.
       </p>
     </header>
 
@@ -30,11 +30,44 @@
 
     <footer class="gallery-footer">
       <div class="hint">
-        Tip: Use your mouse wheel or trackpad to zoom in and out.
+        Tip: Drag to move. Use your mouse wheel or two fingers to zoom in and out.
       </div>
     </footer>
   </div>
 
+  <!-- your existing gallery logic (places images in #galleryCanvas) -->
   <script src="gallery.js"></script>
+
+  <!-- pan+zoom library for desktop + mobile -->
+  <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+  <script>
+    // Wait for gallery.js to inject all photos into #galleryCanvas
+    window.addEventListener('load', function () {
+      const canvas = document.getElementById('galleryCanvas');
+
+      // Enable pan + zoom on the whole canvas
+      const panzoom = Panzoom(canvas, {
+        maxScale: 5,
+        minScale: 0.8,
+        contain: 'outside',      // let you move around freely
+        startScale: 1,
+        cursor: 'grab'
+      });
+
+      // Desktop wheel zoom
+      const viewport = document.getElementById('galleryViewport');
+      viewport.addEventListener('wheel', function (event) {
+        panzoom.zoomWithWheel(event);
+      });
+
+      // Make drag feel nice
+      viewport.addEventListener('pointerdown', () => {
+        canvas.style.cursor = 'grabbing';
+      });
+      window.addEventListener('pointerup', () => {
+        canvas.style.cursor = 'grab';
+      });
+    });
+  </script>
 </body>
 </html>
