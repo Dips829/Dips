@@ -179,7 +179,7 @@ function checkPuzzleComplete() {
       piece.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
     });
 
-    puzzleStatus.textContent = 'Perfect, just like us.';
+    puzzleStatus.textContent = 'Perfect, just like us. Please click on the image to proceed.';
 
     // play audio when puzzle is completed
     const audio = document.getElementById('puzzleAudio');
@@ -231,3 +231,4 @@ puzzleReset.addEventListener('click', () => {
   setupPuzzle();
   puzzleStatus.textContent = '';
 });
+
