@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Our 1st Year</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <section class="hero">
+    <!-- bg video now uses img/bg/1yrBG.mp4 -->
+    <video
+      class="hero-video"
+      src="img/bg/1yrBG.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+    ></video>
+
+    <div class="hero-soft-vignette"></div>
+
+    <div class="hero-ui">
+      <!-- Card that starts as name pill and expands -->
+      <div class="hero-card" id="heroCard">
+        <div class="hero-name" id="heroName" data-text="To, Deepika K Naik"></div>
+
+        <!-- pill line is now always visible under the name -->
+        <div
+          class="letter-pill"
+          id="subtitlePill"
+          data-text="ONE YEAR UNDER THIS MOON"
+        ></div>
+
+        <!-- body only shows after expand -->
+        <div class="hero-card-body" id="letterBody">
+          <p class="letter-text">
+            My love, its been a wonderful year with you and you are everything I could ask for.
+            I wanted to do something special for us to celebrate our first year together, so I made this little interactive puzzle for you.
+            I hope you enjoy it as much as I enjoyed making it for you.<br>
+            From, your man.
+          </p>
+
+          <div class="letter-actions">
+            <button id="closeLetter" class="ghost-btn">Close</button>
+            <button id="startPuzzle" class="primary-btn">Begin our puzzle ✨</button>
+          </div>
+        </div>
+
+        <!-- puzzle area (initially hidden) -->
+        <div class="puzzle-body" id="puzzleBody">
+          <p class="puzzle-text">
+            Drag the pieces to rebuild our picture.
+          </p>
+
+          <div class="puzzle-layout">
+            <!-- 3×4 target grid -->
+            <div class="puzzle-target" id="puzzleTarget">
+              <div class="puzzle-slot" data-slot="0"></div>
+              <div class="puzzle-slot" data-slot="1"></div>
+              <div class="puzzle-slot" data-slot="2"></div>
+              <div class="puzzle-slot" data-slot="3"></div>
+              <div class="puzzle-slot" data-slot="4"></div>
+              <div class="puzzle-slot" data-slot="5"></div>
+              <div class="puzzle-slot" data-slot="6"></div>
+              <div class="puzzle-slot" data-slot="7"></div>
+              <div class="puzzle-slot" data-slot="8"></div>
+              <div class="puzzle-slot" data-slot="9"></div>
+              <div class="puzzle-slot" data-slot="10"></div>
+              <div class="puzzle-slot" data-slot="11"></div>
+            </div>
+
+            <!-- shuffled pieces dock -->
+            <div class="puzzle-pieces" id="puzzlePieces"></div>
+
+            <!-- back / reset buttons -->
+            <div class="puzzle-actions">
+              <button id="puzzleBack" class="ghost-btn">Back to letter</button>
+              <button id="puzzleReset" class="primary-btn">Reset puzzle</button>
+            </div>
+          </div>
+
+          <p class="puzzle-status" id="puzzleStatus"></p>
+        </div>
+      </div>
+
+      <!-- path light + hint -->
+      <button id="moonButton" class="path-button" aria-label="Open letter">
+        <span class="path-glow"></span>
+        <span class="path-core"></span>
+      </button>
+      <div class="path-hint">Activate by interacting with this.</div>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
