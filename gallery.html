@@ -35,6 +35,11 @@
     </footer>
   </div>
 
+  <!-- gallery background music -->
+  <audio id="galleryAudio" preload="auto" loop>
+    <source src="img/bg/gal1.mp3" type="audio/mpeg" />
+  </audio>
+
   <!-- your existing gallery logic (places images in #galleryCanvas) -->
   <script src="gallery.js"></script>
 
@@ -67,6 +72,13 @@
       window.addEventListener('pointerup', () => {
         canvas.style.cursor = 'grab';
       });
+
+      // Start gallery music (user already interacted on previous page) [web:217][web:221]
+      const gAudio = document.getElementById('galleryAudio');
+      if (gAudio) {
+        gAudio.volume = 0.8;
+        gAudio.play().catch(() => {});
+      }
     });
   </script>
 </body>
