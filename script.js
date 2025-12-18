@@ -121,11 +121,82 @@ function setupPuzzle() {
   const pieces = document.querySelectorAll('.puzzle-piece');
 
   pieces.forEach((piece) => {
+    // ===== DESKTOP HTML5 DRAG =====
     piece.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', piece.dataset.index);
     });
+
+    // ===== MOBILE + DESKTOP POINTER DRAG =====
+    let pointerDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let pieceStartX = 0;
+    let pieceStartY = 0;
+
+    piece.style.touchAction = 'none';   // allow custom drag
+    piece.style.position = 'relative';  // so translate works inside parent
+
+    piece.addEventListener('pointerdown', (e) => {
+      pointerDragging = true;
+      piece.setPointerCapture(e.pointerId);
+      startX = e.clientX;
+      startY = e.clientY;
+      pieceStartX = parseFloat(piece.dataset.dx || '0');
+      pieceStartY = parseFloat(piece.dataset.dy || '0');
+    });
+
+    piece.addEventListener('pointermove', (e) => {
+      if (!pointerDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const nx = pieceStartX + dx;
+      const ny = pieceStartY + dy;
+      piece.dataset.dx = nx;
+      piece.dataset.dy = ny;
+      piece.style.transform = `translate(${nx}px, ${ny}px)`;
+    });
+
+    function endPointerDrag(e) {
+      if (!pointerDragging) return;
+      pointerDragging = false;
+      try {
+        piece.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+
+      // find nearest empty slot and snap
+      let bestSlot = null;
+      let bestDist = Infinity;
+      const rectPiece = piece.getBoundingClientRect();
+
+      puzzleSlots.forEach((slot) => {
+        if (slot.firstChild && slot.firstChild !== piece) return;
+        const r = slot.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const px = rectPiece.left + rectPiece.width / 2;
+        const py = rectPiece.top + rectPiece.height / 2;
+        const d = Math.hypot(px - cx, py - cy);
+        if (d < bestDist) {
+          bestDist = d;
+          bestSlot = slot;
+        }
+      });
+
+      // only snap if actually close
+      if (bestSlot && bestDist < 120) {
+        bestSlot.appendChild(piece);
+        piece.style.transform = 'translate(0,0)';
+        piece.dataset.dx = '0';
+        piece.dataset.dy = '0';
+        checkPuzzleComplete();
+      }
+    }
+
+    piece.addEventListener('pointerup', endPointerDrag);
+    piece.addEventListener('pointercancel', endPointerDrag);
   });
 
+  // slots: keep normal drag/drop so mouse works
   puzzleSlots.forEach((slot) => {
     slot.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -139,6 +210,10 @@ function setupPuzzle() {
 
       const piece = [...pieces].find((p) => p.dataset.index === index);
       if (!piece) return;
+
+      piece.style.transform = 'translate(0,0)';
+      piece.dataset.dx = '0';
+      piece.dataset.dy = '0';
 
       slot.appendChild(piece);
       checkPuzzleComplete();
@@ -176,6 +251,9 @@ function checkPuzzleComplete() {
       const offsetX = -col * TILE_W;
       const offsetY = -row * TILE_H;
       piece.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
+      piece.style.transform = 'translate(0,0)';
+      piece.dataset.dx = '0';
+      piece.dataset.dy = '0';
     });
 
     puzzleStatus.textContent = 'Perfect, just like us.';
