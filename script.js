@@ -14,6 +14,10 @@ const puzzleBack = document.getElementById('puzzleBack');
 const puzzleReset = document.getElementById('puzzleReset');
 const pathHint = document.querySelector('.path-hint');
 
+/* audio refs */
+const bgAudio = document.getElementById('bgAudio');
+const puzzleAudio = document.getElementById('puzzleAudio');
+
 /* grid dimensions for logic */
 const COLS = 3;
 const ROWS = 4;
@@ -24,6 +28,38 @@ const TILE_W = FRAME_WIDTH / COLS;   // 90
 const TILE_H = FRAME_HEIGHT / ROWS;  // 90
 
 let puzzleClickable = false; // becomes true only when solved
+
+/* small helper to fade between tracks */
+function fadeAudio(from, to, duration = 800) {
+  const steps = 16;
+  const stepTime = duration / steps;
+  let currentStep = 0;
+
+  if (to) {
+    to.volume = 0;
+    to.play().catch(() => {});
+  }
+
+  const interval = setInterval(() => {
+    currentStep += 1;
+    const t = currentStep / steps;
+
+    if (from) {
+      from.volume = Math.max(0, 1 - t);
+    }
+    if (to) {
+      to.volume = Math.min(1, t);
+    }
+
+    if (currentStep >= steps) {
+      clearInterval(interval);
+      if (from) {
+        from.pause();
+        from.currentTime = 0;
+      }
+    }
+  }, stepTime);
+}
 
 /* generic typing helper */
 function typeText(element, fullText, options = {}) {
@@ -45,7 +81,7 @@ function typeText(element, fullText, options = {}) {
   setTimeout(step, startDelay);
 }
 
-/* run both typings in sequence on load */
+/* run both typings in sequence on load, and start bg music after first user interaction */
 window.addEventListener('DOMContentLoaded', () => {
   if (!heroName) return;
 
@@ -60,6 +96,18 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // Start subtle bg audio on first interaction (required by browsers) [web:217][web:221]
+  const startBgOnce = () => {
+    if (!bgAudio) return;
+    if (!bgAudio.paused) return;
+    bgAudio.volume = 0.6;
+    bgAudio.play().catch(() => {});
+    window.removeEventListener('click', startBgOnce);
+    window.removeEventListener('touchstart', startBgOnce);
+  };
+  window.addEventListener('click', startBgOnce);
+  window.addEventListener('touchstart', startBgOnce);
 });
 
 /* open / close logic */
@@ -181,27 +229,45 @@ function checkPuzzleComplete() {
 
     puzzleStatus.textContent = 'Perfect, just like us. Please click on the image to proceed.';
 
-    // play audio when puzzle is completed
-    const audio = document.getElementById('puzzleAudio');
-    if (audio) {
-      audio.currentTime = 0;
-      const playPromise = audio.play();   // allowed because user already interacted [web:217][web:221]
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch((err) => {
-          console.warn('Audio play blocked or failed:', err);
-        });
-      }
+    // switch from bg audio to puzzle audio
+    if (puzzleAudio) {
+      fadeAudio(bgAudio, puzzleAudio);
     }
   }
 }
 
-
+// navigate to gallery when she clicks the completed picture
 // navigate to gallery when she clicks the completed picture
 const puzzleTarget = document.getElementById('puzzleTarget');
 if (puzzleTarget) {
   puzzleTarget.addEventListener('click', () => {
     if (!puzzleClickable) return;
-    window.location.href = 'gallery.html';
+    // smooth stop: fade puzzleAudio out, then navigate
+    if (puzzleAudio) {
+      puzzleAudio.volume = 1;
+      const steps = 10;
+      let s = 0;
+      const iv = setInterval(() => {
+        s++;
+        puzzleAudio.volume = Math.max(0, 1 - s / steps);
+        if (s >= steps) {
+          clearInterval(iv);
+          puzzleAudio.pause();
+          puzzleAudio.currentTime = 0;
+          if (bgAudio) {
+            bgAudio.pause();
+            bgAudio.currentTime = 0;
+          }
+          window.location.href = 'gallery.html';
+        }
+      }, 60);
+    } else {
+      if (bgAudio) {
+        bgAudio.pause();
+        bgAudio.currentTime = 0;
+      }
+      window.location.href = 'gallery.html';
+    }
   });
 }
 
@@ -225,10 +291,19 @@ puzzleBack.addEventListener('click', () => {
   puzzleBody.classList.remove('active');
   puzzleStatus.textContent = '';
   letterBody.style.display = 'block';
+
+  // if puzzle music was playing, fade back to bg loop
+  if (puzzleClickable && puzzleAudio && bgAudio) {
+    fadeAudio(puzzleAudio, bgAudio);
+  }
 });
 
 puzzleReset.addEventListener('click', () => {
   setupPuzzle();
   puzzleStatus.textContent = '';
-});
 
+  // if puzzle reset after solving, also go back to bg music
+  if (puzzleAudio && bgAudio) {
+    fadeAudio(puzzleAudio, bgAudio);
+  }
+});
