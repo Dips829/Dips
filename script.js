@@ -17,6 +17,7 @@ const pathHint = document.querySelector('.path-hint');
 /* audio refs */
 const bgAudio = document.getElementById('bgAudio');
 const puzzleAudio = document.getElementById('puzzleAudio');
+const wrongAudio = document.getElementById('wrongAudio');
 
 /* grid dimensions for logic */
 const COLS = 3;
@@ -97,7 +98,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Start subtle bg audio on first interaction (required by browsers) [web:217][web:221]
+  // Start subtle bg audio on first interaction [web:217][web:221]
   const startBgOnce = () => {
     if (!bgAudio) return;
     if (!bgAudio.paused) return;
@@ -199,10 +200,16 @@ function setupPuzzle() {
 
 function checkPuzzleComplete() {
   let complete = true;
+  let allFilled = true;
 
   puzzleSlots.forEach((slot) => {
     const child = slot.firstElementChild;
-    if (!child || child.dataset.index !== slot.dataset.slot) {
+    if (!child) {
+      allFilled = false;
+      complete = false;
+      return;
+    }
+    if (child.dataset.index !== slot.dataset.slot) {
       complete = false;
     }
   });
@@ -233,10 +240,17 @@ function checkPuzzleComplete() {
     if (puzzleAudio) {
       fadeAudio(bgAudio, puzzleAudio);
     }
+  } else {
+    // only play wrong sound if ALL slots filled but arrangement is wrong
+    if (allFilled && wrongAudio) {
+      wrongAudio.currentTime = 0;
+      wrongAudio.volume = 1;
+      wrongAudio.play().catch(() => {});
+    }
   }
 }
 
-// navigate to gallery when she clicks the completed picture
+
 // navigate to gallery when she clicks the completed picture
 const puzzleTarget = document.getElementById('puzzleTarget');
 if (puzzleTarget) {
@@ -292,9 +306,17 @@ puzzleBack.addEventListener('click', () => {
   puzzleStatus.textContent = '';
   letterBody.style.display = 'block';
 
-  // if puzzle music was playing, fade back to bg loop
-  if (puzzleClickable && puzzleAudio && bgAudio) {
+  // stop wrong/puzzle sounds and go back to bg loop
+  if (wrongAudio) {
+    wrongAudio.pause();
+    wrongAudio.currentTime = 0;
+  }
+  if (puzzleAudio && !puzzleAudio.paused) {
     fadeAudio(puzzleAudio, bgAudio);
+  } else if (bgAudio && bgAudio.paused) {
+    // ensure bg is running again if everything was stopped
+    bgAudio.volume = 0.6;
+    bgAudio.play().catch(() => {});
   }
 });
 
@@ -302,8 +324,12 @@ puzzleReset.addEventListener('click', () => {
   setupPuzzle();
   puzzleStatus.textContent = '';
 
-  // if puzzle reset after solving, also go back to bg music
-  if (puzzleAudio && bgAudio) {
+  // stop wrong/puzzle sounds and go back to bg music
+  if (wrongAudio) {
+    wrongAudio.pause();
+    wrongAudio.currentTime = 0;
+  }
+  if (puzzleAudio && !puzzleAudio.paused) {
     fadeAudio(puzzleAudio, bgAudio);
   }
 });
